@@ -42,16 +42,16 @@ ACTIVITY_TYPES = {
 }
 
 COGS = [
-    "cogs.generate",
-    "cogs.stock",
-    "cogs.drops",
-    "cogs.vouches",
-    "cogs.subscriptions",
-    "cogs.admin",
-    "cogs.profile",
-    "cogs.blacklist",
-    "cogs.stats",
-    "cogs.utility",
+    "generate",
+    "stock",
+    "drops",
+    "vouches",
+    "subscriptions",
+    "admin",
+    "profile",
+    "blacklist",
+    "stats",
+    "utility",
 ]
 
 SUB_ROLE_KEYS = {"free": "role_free", "free+": "role_freeplus", "premium": "role_premium"}
