@@ -5,6 +5,7 @@ Mirrors the original database.js behaviour exactly.
 
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -32,19 +33,118 @@ def _save(filename: str, data: Any) -> None:
     (DATA_DIR / filename).write_text(json.dumps(data, indent=2))
 
 
+def _repair_json_text(text: str) -> str:
+    """Best-effort repair of near-valid JSON — strips trailing commas before
+    closing brackets/braces, which is the most common corruption pattern
+    (e.g. a stray blank line or ``\\n`` entry left dangling at the end of an
+    array)."""
+    return re.sub(r",\s*([\]}])", r"\1", text)
+
+
+def _sanitize_stock_entries(items: list) -> tuple:
+    """Strip null / empty / whitespace-only entries from a stock category
+    array. Returns (cleaned_list, removed_count)."""
+    cleaned = []
+    removed = 0
+    for item in items:
+        if item is None:
+            removed += 1
+            continue
+        if isinstance(item, str) and item.strip() == "":
+            removed += 1
+            continue
+        cleaned.append(item)
+    return cleaned, removed
+
+
 def _load_stock(table: str) -> dict:
     p = DATA_DIR / f"{table}.json"
     if not p.exists():
         p.write_text("{}")
         return {}
+
+    raw = p.read_text()
     try:
-        return json.loads(p.read_text())
+        data = json.loads(raw)
     except Exception:
+        # Attempt a best-effort repair (e.g. trailing commas caused by stray
+        # newline entries) before giving up entirely.
+        try:
+            data = json.loads(_repair_json_text(raw))
+        except Exception:
+            return {}
+
+    if not isinstance(data, dict):
         return {}
+
+    # Sanitize each category array in-memory (does not touch disk — use
+    # validate_stock() to persist the cleaned data).
+    cleaned = {}
+    for category, items in data.items():
+        if isinstance(items, list):
+            cleaned[category], _ = _sanitize_stock_entries(items)
+        else:
+            cleaned[category] = items
+    return cleaned
 
 
 def _save_stock(table: str, data: dict) -> None:
     (DATA_DIR / f"{table}.json").write_text(json.dumps(data, indent=2))
+
+
+def validate_stock(table: str = "stock") -> dict:
+    """Checks stock.json (or the given stock table) for corruption and
+    repairs it in place. Removes null/empty/whitespace-only entries from
+    every category array and, if the file could not be parsed as valid
+    JSON, attempts a best-effort repair before re-saving.
+
+    Returns a report dict:
+        {
+            "was_corrupt": bool,
+            "total_removed": int,
+            "categories": {category: removed_count, ...},
+        }
+    """
+    p = DATA_DIR / f"{table}.json"
+    if not p.exists():
+        return {"was_corrupt": False, "total_removed": 0, "categories": {}}
+
+    raw = p.read_text()
+    was_corrupt = False
+    try:
+        data = json.loads(raw)
+    except Exception:
+        was_corrupt = True
+        try:
+            data = json.loads(_repair_json_text(raw))
+        except Exception:
+            data = {}
+
+    if not isinstance(data, dict):
+        data = {}
+        was_corrupt = True
+
+    cleaned = {}
+    categories_removed = {}
+    total_removed = 0
+    for category, items in data.items():
+        if not isinstance(items, list):
+            cleaned[category] = items
+            continue
+        valid, removed = _sanitize_stock_entries(items)
+        cleaned[category] = valid
+        if removed:
+            categories_removed[category] = removed
+            total_removed += removed
+
+    if was_corrupt or total_removed > 0:
+        _save_stock(table, cleaned)
+
+    return {
+        "was_corrupt": was_corrupt,
+        "total_removed": total_removed,
+        "categories": categories_removed,
+    }
 
 
 _DEFAULT_USER = dict(
