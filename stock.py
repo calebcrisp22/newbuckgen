@@ -312,6 +312,46 @@ class Stock(commands.Cog):
         embed.timestamp = discord.utils.utcnow()
         await interaction.response.send_message(embeds=[embed], ephemeral=True)
 
+    # /fixstock — repair corrupted stock.json (stray newline/empty entries, malformed JSON)
+    @app_commands.command(name="fixstock",
+                          description="[Owner] Validate and repair stock.json if corrupted.")
+    async def fixstock(self, interaction: discord.Interaction):
+        if not await utils.owner_only(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+
+        report = db.validate_stock("stock")
+
+        if not report["was_corrupt"] and report["total_removed"] == 0:
+            embed = discord.Embed(
+                color=0x57F287,
+                title="✅ Stock File Healthy",
+                description="No corruption detected — `stock.json` is valid and clean.",
+            )
+        else:
+            details = "\n".join(
+                f"• **{CAT_LABELS.get(cat, cat)}** — removed {count} corrupted entr{'y' if count == 1 else 'ies'}"
+                for cat, count in report["categories"].items()
+            ) or "No per-category corrupted entries found."
+            embed = discord.Embed(
+                color=0xFEE75C,
+                title="🛠️ Stock File Repaired",
+                description=(
+                    f"{'⚠️ The file had malformed JSON and was repaired.' if report['was_corrupt'] else 'Malformed JSON structure was not detected, but stray entries were cleaned.'}\n\n"
+                    f"**Total corrupted entries removed:** {report['total_removed']}\n\n{details}"
+                ),
+            )
+
+        counts = {c: db.stock_count(c) for c in utils.CATEGORIES}
+        embed.add_field(
+            name="📊 Current Stock",
+            value="   •   ".join(f"{CAT_LABELS.get(c, c)} **{n}**" for c, n in counts.items()),
+            inline=False,
+        )
+        embed.set_footer(text="Generator • /fixstock")
+        embed.timestamp = discord.utils.utcnow()
+        await interaction.followup.send(embeds=[embed], ephemeral=True)
+
     # /setcooldown
     @app_commands.command(name="setcooldown",
                           description="[Owner] Set the generate cooldown per category.")
