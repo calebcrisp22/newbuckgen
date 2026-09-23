@@ -32,6 +32,11 @@ Python rewrite of the Discord account generator bot.
 | `/subscription` | Everyone | Check subscription status |
 | `/vouch` | Everyone | Leave a vouch |
 | `/vouches` | Everyone | Show recent vouches |
+| `/vouchstats` | Everyone | View the community rating breakdown |
+| `/servercard` | Everyone | Show a shareable server overview |
+| `/legitstatus` | Everyone | Show the server legit-vote count |
+| `/legitpanel` | Owner | Post a clickable legit-vote panel |
+| `/legitreset` | Owner | Reset legit votes |
 | `/deletevouch` | Owner | Delete a vouch |
 | `/drop setup` | Owner | Configure drop channel |
 | `/drop start` | Owner | Start auto-drops |
