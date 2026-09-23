@@ -448,6 +448,43 @@ def get_generate_stats() -> dict:
     return {"total": len(logs), "by_category": by_cat}
 
 
+
+# ── legit voting ───────────────────────────────────────────────────────────────
+
+def add_legit_vote(user_id: str, guild_id: str, panel_id: str) -> bool:
+    """Add one vote per user to a specific server panel."""
+    votes = _load("legit_votes.json", [])
+    if any(v.get("user_id") == user_id and v.get("guild_id") == guild_id and v.get("panel_id") == panel_id for v in votes):
+        return False
+    votes.append({"user_id": user_id, "guild_id": guild_id, "panel_id": panel_id, "created_at": int(time.time())})
+    _save("legit_votes.json", votes)
+    return True
+
+
+def get_legit_votes(guild_id: str = None, panel_id: str = None) -> list:
+    votes = _load("legit_votes.json", [])
+    if guild_id is not None:
+        votes = [v for v in votes if v.get("guild_id") == str(guild_id)]
+    if panel_id is not None:
+        votes = [v for v in votes if v.get("panel_id") == str(panel_id)]
+    return votes
+
+
+def clear_legit_votes(guild_id: str = None, panel_id: str = None) -> int:
+    votes = _load("legit_votes.json", [])
+    kept = []
+    removed = 0
+    for vote in votes:
+        matches_guild = guild_id is None or vote.get("guild_id") == str(guild_id)
+        matches_panel = panel_id is None or vote.get("panel_id") == str(panel_id)
+        if matches_guild and matches_panel:
+            removed += 1
+        else:
+            kept.append(vote)
+    _save("legit_votes.json", kept)
+    return removed
+
+
 # ── stock alerts ──────────────────────────────────────────────────────────────
 
 def get_stock_alerts() -> dict:
