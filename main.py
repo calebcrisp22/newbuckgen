@@ -52,6 +52,7 @@ COGS = [
     "blacklist",
     "stats",
     "utility",
+    "dashboard",
 ]
 
 SUB_ROLE_KEYS = {"free": "role_free", "free+": "role_freeplus", "premium": "role_premium"}
