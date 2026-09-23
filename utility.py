@@ -41,6 +41,7 @@ HELP_SECTIONS = {
     ],
     "👤 Profile & Invites": [
         ("`/profile`",        "View your profile"),
+        ("`/daily`",          "Claim daily tokens and build a streak"),
         ("`/invites`",        "Check your invite count"),
         ("`/inviteleaderboard`", "Top inviters"),
         ("`/createinvite`",   "Create a tracked invite (owner)"),
@@ -55,6 +56,7 @@ HELP_SECTIONS = {
     "📊 Stats": [
         ("`/dashboard`",      "Open the live command center"),
         ("`/leaderboard`",    "Top account generators"),
+        ("`/activity`",       "View recent generation trends"),
         ("`/ping`",           "Check latency and uptime"),
         ("`/stats`",          "Bot-wide generate statistics"),
         ("`/history`",        "Recent generate activity (owner)"),
