@@ -53,6 +53,9 @@ HELP_SECTIONS = {
         ("`/subscription`",   "Check your subscription status"),
     ],
     "📊 Stats": [
+        ("`/dashboard`",      "Open the live command center"),
+        ("`/leaderboard`",    "Top account generators"),
+        ("`/ping`",           "Check latency and uptime"),
         ("`/stats`",          "Bot-wide generate statistics"),
         ("`/history`",        "Recent generate activity (owner)"),
         ("`/botinfo`",        "Bot information and uptime"),
