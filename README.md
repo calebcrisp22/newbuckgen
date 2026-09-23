@@ -21,6 +21,7 @@ Python rewrite of the Discord account generator bot.
 | `/generate [category]` | Tier role / sub | Generate an account from stock |
 | `/stock` | Everyone | Show stock levels |
 | `/dashboard` | Everyone | Live stock, activity, and quick actions |
+| `/activity` | Everyone | View recent generation trends |
 | `/leaderboard` | Everyone | Top account generators |
 | `/ping` | Everyone | Check latency and uptime |
 | `/addstock` | Owner | Add accounts to stock |
@@ -49,6 +50,7 @@ Python rewrite of the Discord account generator bot.
 | `/tokens balance` | Everyone | Check token balance |
 | `/resetinvites` | Owner | Reset a user's invite count |
 | `/profile` | Everyone | View user profile |
+| `/daily` | Everyone | Claim daily tokens and build a streak |
 | `/invites` | Everyone | Check invite count |
 | `/inviteleaderboard` | Everyone | Top inviters |
 
