@@ -53,6 +53,7 @@ COGS = [
     "stats",
     "utility",
     "dashboard",
+    "community",
 ]
 
 SUB_ROLE_KEYS = {"free": "role_free", "free+": "role_freeplus", "premium": "role_premium"}
@@ -256,12 +257,19 @@ async def on_message(message: discord.Message):
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-    msg = "❌ An error occurred running that command."
+    embed = discord.Embed(
+        color=0xED4245,
+        title="⚠️ Command unavailable",
+        description="That command could not finish this time. Check the command options and try again.",
+    )
+    embed.add_field(name="Quick fixes", value="Confirm you have access, try `/help`, or use `/ping` to check bot health.", inline=False)
+    embed.set_footer(text="Generator • If this keeps happening, contact the server owner")
+    embed.timestamp = discord.utils.utcnow()
     try:
         if interaction.response.is_done():
-            await interaction.followup.send(msg, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message(msg, ephemeral=True)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
     except Exception:
         pass
     print(f"[Command error] {interaction.command}: {error}")
