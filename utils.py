@@ -20,9 +20,12 @@ async def owner_only(interaction: discord.Interaction) -> bool:
     if not is_owner(str(interaction.user.id)):
         embed = discord.Embed(
             color=0xED4245,
-            title="❌ No Permission",
-            description="Only the bot owner can use this command.",
-        ).set_footer(text="Generator")
+            title="🔒 Owner access required",
+            description="This command is reserved for the bot owner so server settings and stock stay protected.",
+        )
+        embed.add_field(name="Need access?", value="Ask the configured bot owner to run this command for you.", inline=False)
+        embed.set_footer(text="Generator • Protected command")
+        embed.timestamp = discord.utils.utcnow()
         await interaction.response.send_message(embeds=[embed], ephemeral=True)
         return False
     return True
