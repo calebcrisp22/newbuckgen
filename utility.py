@@ -39,6 +39,13 @@ HELP_SECTIONS = {
         ("`/vouches`",        "View recent vouches"),
         ("`/deletevouch`",    "Delete a vouch by ID (owner)"),
     ],
+    "🛡️ Community": [
+        ("`/legitpanel`",    "Post a clickable legit-vote panel (owner)"),
+        ("`/legitstatus`",   "Show the server legit-vote count"),
+        ("`/legitreset`",    "Reset legit votes (owner)"),
+        ("`/vouchstats`",    "View the community rating breakdown"),
+        ("`/servercard`",    "Show a shareable server overview"),
+    ],
     "👤 Profile & Invites": [
         ("`/profile`",        "View your profile"),
         ("`/daily`",          "Claim daily tokens and build a streak"),
@@ -181,6 +188,7 @@ class Utility(commands.Cog):
         app_commands.Choice(name="📦 Stock",            value="📦 Stock (Owner)"),
         app_commands.Choice(name="🎁 Drops",            value="🎁 Drops (Owner)"),
         app_commands.Choice(name="💬 Vouches",          value="💬 Vouches"),
+        app_commands.Choice(name="🛡️ Community",       value="🛡️ Community"),
         app_commands.Choice(name="👤 Profile & Invites", value="👤 Profile & Invites"),
         app_commands.Choice(name="🔔 Subscriptions",   value="🔔 Subscriptions"),
         app_commands.Choice(name="📊 Stats",            value="📊 Stats"),
