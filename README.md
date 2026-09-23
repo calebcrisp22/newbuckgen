@@ -20,6 +20,9 @@ Python rewrite of the Discord account generator bot.
 |---|---|---|
 | `/generate [category]` | Tier role / sub | Generate an account from stock |
 | `/stock` | Everyone | Show stock levels |
+| `/dashboard` | Everyone | Live stock, activity, and quick actions |
+| `/leaderboard` | Everyone | Top account generators |
+| `/ping` | Everyone | Check latency and uptime |
 | `/addstock` | Owner | Add accounts to stock |
 | `/clearstock` | Owner | Clear stock |
 | `/setcooldown` | Owner | Set per-category cooldown |
