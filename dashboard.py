@@ -139,7 +139,7 @@ class Dashboard(commands.Cog):
         embed.add_field(name="🏆 Top generators", value=leaders, inline=False)
         embed.add_field(
             name="🚀 Quick actions",
-            value="`/generate`  Generate an account\n`/stock`  Check availability\n`/profile`  View your stats\n`/leaderboard`  See the full ranking",
+            value="`/generate`  Generate an account\n`/stock`  Check availability\n`/profile`  View your stats\n`/daily`  Claim your daily reward\n`/activity`  View recent trends",
             inline=False,
         )
         embed.set_footer(text="Generator • Live dashboard")
@@ -166,9 +166,104 @@ class Dashboard(commands.Cog):
         embed.add_field(name="💬 Messages", value=_number(user.get("messages", 0)), inline=True)
         embed.add_field(name="📨 Invites", value=_number(db.get_inviter_joins(str(target.id))), inline=True)
         embed.add_field(name="⏳ Subscription", value=utils.format_expires(user.get("sub_expires", 0)), inline=True)
+        embed.add_field(name="🔥 Daily streak", value=f"{_number(user.get("daily_streak", 0) or 0)} day(s)", inline=True)
         embed.set_footer(text="Generator • Your activity at a glance")
         embed.timestamp = discord.utils.utcnow()
         return embed
+
+
+    @app_commands.command(name="daily", description="Claim your daily token reward and build a streak.")
+    async def daily(self, interaction: discord.Interaction):
+        user_id = str(interaction.user.id)
+        user = db.get_user(user_id)
+        now = int(time.time())
+        last_claim = int(user.get("daily_claimed", 0) or 0)
+        cooldown = 86400
+        remaining = cooldown - (now - last_claim)
+
+        if last_claim and remaining > 0:
+            hours, remainder = divmod(remaining, 3600)
+            minutes = remainder // 60
+            streak = int(user.get("daily_streak", 0) or 0)
+            embed = discord.Embed(
+                color=COLORS["warning"],
+                title="🕒 Daily reward already claimed",
+                description="Your next reward is charging up. Come back when the timer ends.",
+            )
+            embed.add_field(name="Next claim", value=f"**{hours}h {minutes}m**", inline=True)
+            embed.add_field(name="Current streak", value=f"🔥 **{streak} day(s)**", inline=True)
+            embed.set_footer(text="Generator • Daily rewards")
+            embed.timestamp = discord.utils.utcnow()
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        previous_streak = int(user.get("daily_streak", 0) or 0)
+        streak = previous_streak + 1 if last_claim and now - last_claim <= 172800 else 1
+        reward = 25 + min(streak - 1, 7) * 5
+        new_balance = int(user.get("tokens", 0) or 0) + reward
+        db.update_user(user_id, {
+            "tokens": new_balance,
+            "daily_claimed": now,
+            "daily_streak": streak,
+        })
+
+        embed = discord.Embed(
+            color=COLORS["success"],
+            title="🎁 Daily reward claimed!",
+            description=f"Nice work, {interaction.user.mention}. Your reward has been added to your balance.",
+        )
+        embed.add_field(name="Reward", value=f"🪙 **+{_number(reward)} tokens**", inline=True)
+        embed.add_field(name="New balance", value=f"🪙 **{_number(new_balance)}**", inline=True)
+        embed.add_field(name="Streak", value=f"🔥 **{streak} day(s)**", inline=True)
+        embed.set_footer(text="Generator • Return tomorrow to keep your streak alive")
+        embed.timestamp = discord.utils.utcnow()
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="activity", description="Show recent generation activity and category trends.")
+    @app_commands.guild_only()
+    async def activity(self, interaction: discord.Interaction):
+        now = int(time.time())
+        logs = db.get_generate_logs(500)
+        recent_24 = [entry for entry in logs if int(entry.get("timestamp", 0) or 0) >= now - 86400]
+        recent_7 = [entry for entry in logs if int(entry.get("timestamp", 0) or 0) >= now - 604800]
+        category_counts = Counter(entry.get("category", "unknown") for entry in recent_7)
+        user_counts = Counter(entry.get("user_id") for entry in recent_7 if entry.get("user_id"))
+
+        embed = discord.Embed(
+            color=COLORS["brand"],
+            title="📊 Activity Pulse",
+            description="A rolling look at how the generator is being used.",
+        )
+        if self.bot.user:
+            embed.set_thumbnail(url=self.bot.user.display_avatar.url)
+        embed.add_field(
+            name="⏱️ Last 24 hours",
+            value=f"**{_number(len(recent_24))}** generations\n**{_number(len(set(entry.get('user_id') for entry in recent_24 if entry.get('user_id'))))}** active users",
+            inline=True,
+        )
+        embed.add_field(
+            name="📅 Last 7 days",
+            value=f"**{_number(len(recent_7))}** generations\n**{_number(len(set(entry.get('user_id') for entry in recent_7 if entry.get('user_id'))))}** active users",
+            inline=True,
+        )
+        if category_counts:
+            max_category = max(category_counts.values())
+            category_lines = []
+            for category, count in category_counts.most_common():
+                bar = utils.progress_bar(count, max_category, length=8)
+                category_lines.append(f"{category.capitalize():<8} {bar} **{_number(count)}**")
+            category_value = "\n".join(category_lines)
+        else:
+            category_value = "No generation activity in the last 7 days."
+        embed.add_field(name="📦 Categories • 7 days", value=category_value, inline=False)
+        if user_counts:
+            leaders = "\n".join(f"{index}. <@{user_id}> — **{_number(count)}**" for index, (user_id, count) in enumerate(user_counts.most_common(5), 1))
+        else:
+            leaders = "No active generators yet."
+        embed.add_field(name="🏆 Most active", value=leaders, inline=False)
+        embed.set_footer(text="Generator • Based on the latest 500 logged generations")
+        embed.timestamp = discord.utils.utcnow()
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="dashboard", description="Open the live generator command center.")
     @app_commands.guild_only()
